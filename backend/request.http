@@ -1,0 +1,7 @@
+### POST /ask
+POST http://localhost:3000/ask
+Content-Type: application/json
+
+{
+  "question": "We need to build a real-time collaboration tool for document editing. Our team knows React and Node.js. What technologies should we use for the real-time layer, and what pitfalls should we watch out for?"
+}
