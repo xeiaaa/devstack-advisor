@@ -27,13 +27,22 @@ import {
 } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { askQuestion } from "@/lib/api";
+import { askQuestionStream } from "@/lib/api";
 
 function App() {
   const [configOpen, setConfigOpen] = useState(false);
+  const [streamedAnswer, setStreamedAnswer] = useState("");
 
   const mutation = useMutation({
-    mutationFn: askQuestion,
+    mutationFn: ({
+      question,
+      onDelta,
+      signal,
+    }: {
+      question: string;
+      onDelta: (delta: string) => void;
+      signal?: AbortSignal;
+    }) => askQuestionStream(question, onDelta, signal),
   });
 
   const form = useForm({
@@ -41,9 +50,16 @@ function App() {
       question: "",
     },
     onSubmit: async ({ value }) => {
-      mutation.mutate(value.question, {
-        onSuccess: () => form.reset(),
-      });
+      setStreamedAnswer("");
+      mutation.mutate(
+        {
+          question: value.question,
+          onDelta: (delta) => setStreamedAnswer((prev) => prev + delta),
+        },
+        {
+          onSuccess: () => form.reset(),
+        },
+      );
     },
   });
 
@@ -93,14 +109,20 @@ function App() {
                   </AlertDescription>
                 </Alert>
               )}
-              {mutation.isSuccess && mutation.data && (
+              {streamedAnswer ? (
                 <div className="prose dark:prose-invert max-w-none">
                   <Markdown remarkPlugins={[remarkGfm]}>
-                    {mutation.data.answer}
+                    {streamedAnswer}
                   </Markdown>
                 </div>
+              ) : null}
+              {isPending && !streamedAnswer && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Spinner className="size-4" />
+                  <span>Thinking...</span>
+                </div>
               )}
-              {!mutation.isSuccess && !mutation.isError && (
+              {!streamedAnswer && !isPending && !mutation.isError && (
                 <p className="text-muted-foreground">
                   Chat, markdown, and responses will appear here.
                 </p>

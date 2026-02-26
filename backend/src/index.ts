@@ -97,22 +97,36 @@ app.post("/ask", async (req, res) => {
     .join("\n\n---\n\n");
 
   try {
-    const response = await openai.responses.create({
+    const stream = await openai.responses.create({
       model,
       temperature,
       instructions: SYNTHESIS_INSTRUCTIONS,
       input: context
         ? `Context from knowledge base:\n\n${context}\n\nUser question: ${question}`
         : question,
+      stream: true,
     });
 
-    res.json({
-      status: "ok",
-      answer: response.output_text,
-      vectorStoreIds,
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
     });
+
+    for await (const event of stream) {
+      if (event.type === "response.output_text.delta" && event.delta) {
+        res.write(`data: ${JSON.stringify({ delta: event.delta })}\n\n`);
+      }
+    }
+    res.write("event: done\ndata: {}\n\n");
+    res.end();
   } catch (err) {
-    res.status(500).json({ error: "Failed to generate response" });
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Failed to generate response" });
+    } else {
+      res.write(`event: error\ndata: ${JSON.stringify({ error: "Failed to generate response" })}\n\n`);
+      res.end();
+    }
   }
 });
 
