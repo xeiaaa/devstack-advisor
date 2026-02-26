@@ -10,13 +10,23 @@ export type AskErrorResponse = {
   error: string;
 };
 
+export type AskSettings = {
+  model?: string;
+  temperature?: number;
+  maxResults?: number;
+};
+
 export async function askQuestion(
-  question: string
+  question: string,
+  settings?: AskSettings
 ): Promise<AskResponse> {
   const res = await fetch(`${API_URL}/ask`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: question.trim() }),
+    body: JSON.stringify({
+      question: question.trim(),
+      ...settings,
+    }),
   });
 
   const data = (await res.json()) as AskResponse | AskErrorResponse;
@@ -33,12 +43,16 @@ export async function askQuestion(
 export async function askQuestionStream(
   question: string,
   onDelta: (delta: string) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  settings?: AskSettings
 ): Promise<void> {
   const res = await fetch(`${API_URL}/ask`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: question.trim() }),
+    body: JSON.stringify({
+      question: question.trim(),
+      ...settings,
+    }),
     signal,
   });
 
