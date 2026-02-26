@@ -43,10 +43,27 @@ app.get("/health", (_req, res) => {
 
     We'll do Option 2
 */
+
+// TODO: Update this prompt
 const SYNTHESIS_INSTRUCTIONS = `- Synthesise information from all available knowledge sources
 - Provide specific, actionable recommendations rather than generic advice
 - Reference relevant case studies and real-world outcomes where applicable
 - Acknowledge trade-offs and limitations of recommended approaches`;
+
+type HistoryEntry = {
+  id: string;
+  question: string;
+  response: string;
+  settings: { model: string; temperature: number; maxResults: number };
+  createdAt: string;
+  completedAt: string | undefined;
+};
+
+const history: HistoryEntry[] = [];
+
+app.get("/history", (_req, res) => {
+  res.json(history);
+});
 
 app.post("/ask", async (req, res) => {
   const {
@@ -63,6 +80,18 @@ app.post("/ask", async (req, res) => {
       .json({ error: "question is required and must be a non-empty string" });
     return;
   }
+
+  const id = `${Date.now()}`;
+  const settings = { model, temperature, maxResults };
+  const entry: HistoryEntry = {
+    id,
+    question,
+    response: "",
+    settings,
+    createdAt: new Date().toISOString(),
+    completedAt: undefined,
+  };
+  history.push(entry);
 
   const { data } = await openai.vectorStores.list();
   const vectorStoreIds = data.map(({ id }) => id);
@@ -113,18 +142,24 @@ app.post("/ask", async (req, res) => {
       Connection: "keep-alive",
     });
 
+    let fullResponse = "";
     for await (const event of stream) {
       if (event.type === "response.output_text.delta" && event.delta) {
+        fullResponse += event.delta;
         res.write(`data: ${JSON.stringify({ delta: event.delta })}\n\n`);
       }
     }
+    entry.response = fullResponse;
+    entry.completedAt = new Date().toISOString();
     res.write("event: done\ndata: {}\n\n");
     res.end();
   } catch (err) {
     if (!res.headersSent) {
       res.status(500).json({ error: "Failed to generate response" });
     } else {
-      res.write(`event: error\ndata: ${JSON.stringify({ error: "Failed to generate response" })}\n\n`);
+      res.write(
+        `event: error\ndata: ${JSON.stringify({ error: "Failed to generate response" })}\n\n`,
+      );
       res.end();
     }
   }

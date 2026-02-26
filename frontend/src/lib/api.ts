@@ -1,5 +1,20 @@
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
+export type HistoryEntry = {
+  id: string;
+  question: string;
+  response: string;
+  settings: { model: string; temperature: number; maxResults: number };
+  createdAt: string;
+  completedAt: string | undefined;
+};
+
+export async function getHistory(): Promise<HistoryEntry[]> {
+  const res = await fetch(`${API_URL}/history`);
+  if (!res.ok) throw new Error("Failed to fetch history");
+  return res.json();
+}
+
 export type AskResponse = {
   status: "ok";
   answer: string;

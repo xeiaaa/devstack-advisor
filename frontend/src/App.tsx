@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Settings } from "lucide-react";
+import { Info, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   InputGroup,
@@ -28,15 +28,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarInset,
-} from "@/components/ui/sidebar";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { askQuestionStream } from "@/lib/api";
+import { askQuestionStream, getHistory } from "@/lib/api";
 import { useSettings } from "@/contexts/settings-context";
 import { OPENAI_MODELS } from "@/lib/constants";
 
@@ -48,7 +48,14 @@ const MAX_RESULTS_MAX = 100;
 function App() {
   const [configOpen, setConfigOpen] = useState(false);
   const [streamedAnswer, setStreamedAnswer] = useState("");
+  const [inFlightQuestion, setInFlightQuestion] = useState<string | null>(null);
   const { settings, setModel, setTemperature, setMaxResults } = useSettings();
+  const queryClient = useQueryClient();
+
+  const { data: history = [] } = useQuery({
+    queryKey: ["history"],
+    queryFn: getHistory,
+  });
 
   const mutation = useMutation({
     mutationFn: ({
@@ -75,6 +82,7 @@ function App() {
     },
     onSubmit: async ({ value }) => {
       setStreamedAnswer("");
+      setInFlightQuestion(value.question);
       mutation.mutate(
         {
           question: value.question,
@@ -86,13 +94,31 @@ function App() {
           },
         },
         {
-          onSuccess: () => form.reset(),
+          onSuccess: async () => {
+            form.reset();
+            await queryClient.invalidateQueries({ queryKey: ["history"] });
+            setInFlightQuestion(null);
+          },
+          onError: () => setInFlightQuestion(null),
         },
       );
     },
   });
 
   const isPending = mutation.isPending;
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // TODO: if the user scrolls up while receiving chunks, disable this (for better user experience like in chatGPT)
+  const hasInitiallyScrolled = useRef(false);
+  useEffect(() => {
+    if (history.length > 0 && !hasInitiallyScrolled.current) {
+      hasInitiallyScrolled.current = true;
+      bottomRef.current?.scrollIntoView();
+    }
+    if (inFlightQuestion || streamedAnswer) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [history, inFlightQuestion, streamedAnswer]);
 
   return (
     <div className="flex h-screen flex-col">
@@ -177,116 +203,163 @@ function App() {
         </Sheet>
       </header>
 
-      {/* Main: Sidebar + Chat area */}
-      <SidebarProvider className="flex min-h-0 flex-1">
-        <Sidebar collapsible="none">
-          <SidebarHeader>
-            <span className="text-muted-foreground text-sm font-medium">
-              History
-            </span>
-          </SidebarHeader>
-          <SidebarContent>{/* Empty for now */}</SidebarContent>
-        </Sidebar>
-        <SidebarInset>
-          <div className="flex h-full flex-col">
-            {/* Chat / markdown / response area */}
-            <div className="flex-1 overflow-auto p-4 max-w-3xl mx-auto">
-              {mutation.isError && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>
-                    {mutation.error instanceof Error
-                      ? mutation.error.message
-                      : "Something went wrong"}
-                  </AlertDescription>
-                </Alert>
-              )}
-              {streamedAnswer ? (
-                <div className="prose dark:prose-invert max-w-none">
+      {/* Main content */}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex-1 overflow-auto p-4 max-w-3xl mx-auto w-full flex flex-col gap-6">
+          {mutation.isError && (
+            <Alert variant="destructive" className="shrink-0">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {mutation.error instanceof Error
+                  ? mutation.error.message
+                  : "Something went wrong"}
+              </AlertDescription>
+            </Alert>
+          )}
+          {[
+            ...history,
+            ...(inFlightQuestion
+              ? [
+                  {
+                    id: "in-flight",
+                    question: inFlightQuestion,
+                    response: streamedAnswer,
+                    settings: {
+                      model: settings.model,
+                      temperature: settings.temperature,
+                      maxResults: settings.maxResults,
+                    },
+                    completedAt: undefined,
+                  },
+                ]
+              : []),
+          ].map((entry) => (
+            <div key={entry.id} className="flex flex-col gap-3 shrink-0">
+              <div
+                className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3"
+                data-user-question
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-medium text-primary/80 uppercase tracking-wider">
+                      You asked
+                    </span>
+                    <p className="text-foreground mt-1">{entry.question}</p>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 size-8"
+                        aria-label="View request settings"
+                      >
+                        <Info className="size-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Request settings</DialogTitle>
+                      </DialogHeader>
+                      <dl className="grid gap-2 text-sm">
+                        <div>
+                          <dt className="text-muted-foreground font-medium">
+                            Model
+                          </dt>
+                          <dd>{entry.settings.model}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground font-medium">
+                            Temperature
+                          </dt>
+                          <dd>{entry.settings.temperature}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground font-medium">
+                            Max results
+                          </dt>
+                          <dd>{entry.settings.maxResults}</dd>
+                        </div>
+                      </dl>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+              {entry.response ? (
+                <div className="prose dark:prose-invert max-w-none pl-1">
                   <Markdown remarkPlugins={[remarkGfm]}>
-                    {streamedAnswer}
+                    {entry.response}
                   </Markdown>
                 </div>
-              ) : null}
-              {isPending && !streamedAnswer && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+              ) : (
+                <div className="flex items-center gap-2 text-muted-foreground pl-1">
                   <Spinner className="size-4" />
                   <span>Thinking...</span>
                 </div>
               )}
-              {!streamedAnswer && !isPending && !mutation.isError && (
-                <p className="text-muted-foreground">
-                  Chat, markdown, and responses will appear here.
-                </p>
-              )}
             </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
 
-            {/* Input + submit anchored to bottom */}
-            <div className="shrink-0 border-t p-4 ">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  void form.handleSubmit();
-                }}
-                className="mx-auto flex w-full max-w-3xl gap-2"
-              >
-                <form.Field
-                  name="question"
-                  validators={{
-                    onSubmit: ({ value }) =>
-                      !value?.trim() ? "Question is required" : undefined,
-                  }}
-                >
-                  {(field) => (
-                    <div className="flex flex-1 flex-col gap-1">
-                      <InputGroup
-                        className="flex-1"
-                        data-disabled={isPending ? true : undefined}
+        <div className="shrink-0 border-t p-4 ">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void form.handleSubmit();
+            }}
+            className="mx-auto flex w-full max-w-3xl gap-2"
+          >
+            <form.Field
+              name="question"
+              validators={{
+                onSubmit: ({ value }) =>
+                  !value?.trim() ? "Question is required" : undefined,
+              }}
+            >
+              {(field) => (
+                <div className="flex flex-1 flex-col gap-1">
+                  <InputGroup
+                    className="flex-1"
+                    data-disabled={isPending ? true : undefined}
+                  >
+                    <InputGroupInput
+                      placeholder="Ask about your tech stack..."
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      disabled={isPending}
+                      aria-invalid={
+                        !field.state.meta.isValid && field.state.meta.isTouched
+                          ? true
+                          : undefined
+                      }
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        type="submit"
+                        size="sm"
+                        disabled={isPending}
+                        aria-disabled={isPending}
                       >
-                        <InputGroupInput
-                          placeholder="Ask about your tech stack..."
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
-                          disabled={isPending}
-                          aria-invalid={
-                            !field.state.meta.isValid &&
-                            field.state.meta.isTouched
-                              ? true
-                              : undefined
-                          }
-                        />
-                        <InputGroupAddon align="inline-end">
-                          <InputGroupButton
-                            type="submit"
-                            size="sm"
-                            disabled={isPending}
-                            aria-disabled={isPending}
-                          >
-                            {isPending ? (
-                              <Spinner className="size-4" />
-                            ) : (
-                              "Submit"
-                            )}
-                          </InputGroupButton>
-                        </InputGroupAddon>
-                      </InputGroup>
-                      {!field.state.meta.isValid &&
-                        field.state.meta.isTouched &&
-                        field.state.meta.errors.length > 0 && (
-                          <p className="text-destructive text-sm" role="alert">
-                            {field.state.meta.errors.join(", ")}
-                          </p>
-                        )}
-                    </div>
-                  )}
-                </form.Field>
-              </form>
-            </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+                        {isPending ? <Spinner className="size-4" /> : "Submit"}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  {!field.state.meta.isValid &&
+                    field.state.meta.isTouched &&
+                    field.state.meta.errors.length > 0 && (
+                      <p className="text-destructive text-sm" role="alert">
+                        {field.state.meta.errors.join(", ")}
+                      </p>
+                    )}
+                </div>
+              )}
+            </form.Field>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
