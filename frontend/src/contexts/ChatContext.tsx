@@ -19,6 +19,9 @@ type ChatContextValue = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TanStack Form's FormApi has complex generics
   form: any;
   isHistoryLoading: boolean;
+  isHistoryError: boolean;
+  historyError: Error | null;
+  refetchHistory: () => void;
   isPending: boolean;
   isError: boolean;
   error: Error | null;
@@ -37,6 +40,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const {
     data: history = [],
     isLoading: isHistoryLoading,
+    isError: isHistoryError,
+    error: historyError,
+    refetch: refetchHistory,
   } = useQuery({
     queryKey: ["history"],
     queryFn: getHistory,
@@ -127,6 +133,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     entries,
     form,
     isHistoryLoading,
+    isHistoryError,
+    historyError: historyError instanceof Error ? historyError : null,
+    refetchHistory,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error instanceof Error ? mutation.error : null,
