@@ -1,0 +1,29 @@
+Technology Profile: Mobile Development Approaches
+
+Category: Mobile Application Development
+
+React Native (with Expo):
+Type: Cross-platform (iOS and Android from single codebase)
+Licence: MIT
+Maintained by: Meta (React Native), Expo team (Expo)
+Best for: Teams with React/JavaScript expertise who need to ship on both platforms. Apps with moderate native requirements. MVPs and startup products.
+Strengths: Code sharing with React web applications (up to 70-80% shared logic). Expo simplifies build, deployment, and OTA updates dramatically. Large ecosystem of community packages. Hot reloading speeds up development. EAS (Expo Application Services) provides cloud builds, submissions, and updates. Access to native APIs through Expo modules and community libraries.
+Weaknesses: Performance gap vs native for graphics-intensive apps (games, complex animations). Native module integration can be complex when Expo modules are insufficient. App size tends to be larger than native equivalents. Debugging native bridge issues requires platform-specific knowledge. Some native APIs have delayed support compared to native SDKs.
+Deployment: Expo EAS Build for cloud-based builds. TestFlight (iOS) and Google Play Internal Testing for beta distribution. OTA updates via EAS Update for JavaScript-only changes.
+
+Flutter:
+Type: Cross-platform (iOS, Android, Web, Desktop)
+Licence: BSD 3-Clause
+Maintained by: Google
+Best for: Pixel-perfect custom UI designs, applications requiring consistent look across platforms, teams willing to learn Dart.
+Strengths: Custom rendering engine (Skia/Impeller) provides consistent UI across platforms. Excellent performance approaching native. Strong typing with Dart. Hot reload. Growing ecosystem.
+Weaknesses: Requires learning Dart (limited use outside Flutter). Larger app sizes. Web support still maturing. Smaller ecosystem than React Native. Limited code sharing with existing web codebases.
+
+Native development (Swift/Kotlin):
+Type: Platform-specific
+Best for: Performance-critical applications, apps with heavy native API usage (AR, complex animations, Bluetooth), apps where platform-specific UX is paramount.
+Strengths: Best performance and smallest app size. Immediate access to latest platform APIs. Best tooling (Xcode, Android Studio). Platform-specific UX patterns.
+Weaknesses: Separate codebases for each platform doubles development effort. Requires specialised developers for each platform. No code sharing with web.
+
+Decision framework:
+Choose React Native with Expo if your team knows React/JavaScript, you need to ship on both platforms quickly, and your app is primarily data-driven (forms, lists, dashboards, chat). Choose Flutter if you need pixel-perfect custom UI and are starting fresh without existing web code to share. Choose native if performance is critical or you need deep platform integration that cross-platform tools cannot provide.

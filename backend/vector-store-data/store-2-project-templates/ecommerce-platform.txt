@@ -1,0 +1,32 @@
+Project Template: E-commerce Platform
+
+Project type: Online retail / marketplace
+Complexity: Medium to High
+Typical timeline: 3-6 months for MVP
+Team size: 2-3 developers
+
+Description:
+A platform for selling products or services online, either as a single-vendor store or multi-vendor marketplace. Core functionality includes product catalogue management, shopping cart, checkout flow, payment processing, order management, and customer communications. SEO and page load performance are critical for conversion rates.
+
+Recommended stack:
+Frontend: Next.js with React 18 and TypeScript for server-side rendering (SSR) and static site generation (SSG). Tailwind CSS for styling. Consider headless CMS (Sanity, Strapi) for product content management.
+Backend: Next.js API routes for simple backends, or separate Node.js/Express API for complex business logic. NestJS for marketplace scenarios with complex domain logic.
+Database: PostgreSQL with Prisma or Drizzle ORM. Product catalogue, orders, customers, inventory as core tables. Consider Elasticsearch or Meilisearch for product search with faceted filtering.
+Payments: Stripe (Checkout, Payment Intents, Connect for marketplaces). PayPal as secondary option.
+File storage: Cloudinary or Imgix for product image optimisation and transformation. AWS S3 or Google Cloud Storage for raw file storage.
+Email: Transactional email via Resend or SendGrid for order confirmations, shipping notifications.
+
+Architecture considerations:
+SEO: Server-side rendering is essential for product pages to rank in search engines. Generate sitemaps dynamically. Structured data (JSON-LD) for product rich snippets in Google results.
+Performance: Product images are the largest performance bottleneck. Use responsive images with srcset, lazy loading, and CDN delivery. Target Core Web Vitals: LCP under 2.5 seconds, CLS under 0.1.
+Inventory management: Implement optimistic locking or database-level constraints to prevent overselling during concurrent purchases. Use database transactions for checkout flow.
+Cart persistence: Store cart in database for authenticated users, localStorage for guests. Merge on login.
+
+Key features to plan for:
+Product catalogue with categories, variants (size, colour), and attributes. Search with autocomplete and filtering. Shopping cart with quantity management. Multi-step checkout (shipping, payment, confirmation). Order tracking and status updates. Customer accounts with order history. Admin dashboard for product and order management. Discount codes and promotions. Inventory tracking with low-stock alerts. Reviews and ratings.
+
+Tax and compliance:
+Australian GST: 10% on most goods and services. Display prices inclusive of GST for B2C. ABN validation for B2B transactions. Privacy policy and terms of service required. PCI DSS compliance handled by Stripe (use Stripe Elements, never handle card data directly).
+
+Common pitfalls:
+Neglecting mobile experience (60-70% of e-commerce traffic is mobile). Not optimising product images causes slow page loads and poor conversion. Skipping abandoned cart recovery leaves revenue on the table. Not implementing proper error handling in checkout flow causes lost sales. Ignoring accessibility (WCAG) excludes customers and creates legal risk.

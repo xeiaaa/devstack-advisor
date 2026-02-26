@@ -1,0 +1,29 @@
+Technology Profile: React Ecosystem
+
+Framework: React 18+
+Category: Frontend UI Library
+Licence: MIT
+Maintained by: Meta (Facebook)
+
+Overview:
+React is a declarative, component-based JavaScript library for building user interfaces. It uses a virtual DOM for efficient rendering and supports both client-side and server-side rendering patterns. React 18 introduced concurrent features including automatic batching, transitions, and Suspense for data fetching.
+
+Strengths:
+React has the largest ecosystem of any frontend framework, with extensive third-party library support. Its component model encourages reusable, testable code. The introduction of hooks in React 16.8 simplified state management and side effects. React's one-way data flow makes applications predictable and easier to debug. Strong TypeScript support with excellent type inference. The React Native companion framework enables code sharing between web and mobile platforms.
+
+Weaknesses:
+React is a library, not a full framework, requiring additional decisions for routing, state management, and build tooling. This "choose your own adventure" approach can lead to decision fatigue and inconsistent project structures across teams. Bundle sizes can grow quickly without careful code splitting. The learning curve for advanced patterns like render props, higher-order components, and concurrent features is significant.
+
+Best suited for:
+Single-page applications (SPAs), complex interactive dashboards, applications requiring shared logic between web and mobile (via React Native), projects where long-term maintainability and large team scalability are priorities.
+
+Common companion libraries:
+State management: Redux Toolkit, Zustand, Jotai, TanStack Query (for server state)
+Routing: React Router, Wouter, TanStack Router
+UI components: shadcn/ui, Material UI, Chakra UI, Ant Design
+Build tools: Vite, Next.js, Remix
+Form handling: React Hook Form, Formik
+Testing: Vitest, React Testing Library, Playwright
+
+Performance considerations:
+React's virtual DOM diffing adds overhead compared to fine-grained reactivity (Solid, Svelte). For highly interactive UIs with thousands of updating elements, consider virtualisation libraries like TanStack Virtual. Use React.memo, useMemo, and useCallback judiciously to prevent unnecessary re-renders. React Server Components (RSC) can significantly reduce client-side JavaScript for content-heavy pages.

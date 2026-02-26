@@ -1,0 +1,33 @@
+Project Template: Real-time Collaboration Application
+
+Project type: Interactive multi-user platform
+Complexity: Very High
+Typical timeline: 6-12 months for MVP
+Team size: 3-5 developers
+
+Description:
+An application where multiple users interact simultaneously with shared state. Examples include collaborative document editors, whiteboard tools, multiplayer games, live event platforms, and real-time dashboards. The core challenge is maintaining consistency across clients while handling network latency, conflicts, and disconnections gracefully.
+
+Recommended stack:
+Frontend: React 18 with TypeScript, Vite, Tailwind CSS. Consider using Yjs or Automerge for CRDT-based conflict resolution in collaborative editing scenarios.
+Backend: Node.js with Express.js (TypeScript). WebSocket server using Socket.IO or native ws library. Consider NestJS with its built-in WebSocket gateway for structured real-time APIs.
+Database: PostgreSQL for persistent storage. Redis for pub/sub messaging between server instances and ephemeral state (presence, cursors, typing indicators).
+Real-time transport: WebSocket for bidirectional communication. Server-Sent Events (SSE) for one-way data streams (notifications, live feeds). Consider WebRTC for peer-to-peer audio/video.
+
+Architecture considerations:
+State synchronisation: Operational Transform (OT) or Conflict-free Replicated Data Types (CRDTs) for collaborative editing. CRDTs (via Yjs) are increasingly preferred as they handle offline editing and don't require a central server for conflict resolution.
+Scaling: WebSocket connections are stateful, so horizontal scaling requires sticky sessions or a Redis pub/sub layer to broadcast events across server instances. Each Node.js process can handle approximately 10,000-50,000 concurrent WebSocket connections depending on message frequency.
+Presence system: Track connected users, their cursors, selections, and activity status. Use Redis with short TTL keys for presence data.
+Optimistic updates: Apply changes immediately on the client and reconcile with server state. Roll back if server rejects the change.
+
+Key features to plan for:
+Real-time cursors and selections showing other users, presence indicators (online, away, offline), conflict resolution for simultaneous edits, offline support with sync-on-reconnect, undo/redo with collaborative history, permissions system (view, comment, edit), activity feed and notifications, version history with point-in-time recovery.
+
+Performance requirements:
+Target latency under 100ms for real-time updates. Message batching and debouncing for high-frequency events (cursor movement, typing). Binary protocols (MessagePack, Protocol Buffers) over JSON for high-throughput scenarios. Connection pooling and graceful degradation under load.
+
+Common pitfalls:
+Not handling reconnection and state recovery leads to data loss. Ignoring conflict resolution causes "last write wins" data corruption. Not throttling cursor/presence updates overwhelms the server and clients. Testing only with low concurrency misses scaling issues that appear at 100+ simultaneous users.
+
+Third-party alternatives:
+Consider Liveblocks, Ably, or Pusher for managed real-time infrastructure if building the WebSocket layer from scratch is not justified. These services handle scaling, presence, and conflict resolution but add vendor dependency and ongoing costs.

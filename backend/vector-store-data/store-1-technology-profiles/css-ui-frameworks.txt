@@ -1,0 +1,34 @@
+Technology Profile: CSS Frameworks and UI Component Libraries
+
+Category: Frontend Styling and Component Systems
+
+Tailwind CSS:
+Type: Utility-first CSS framework
+Licence: MIT
+Best for: Custom designs that don't follow an existing design system. Teams that want full control over visual design. Projects where performance and small bundle size matter.
+Strengths: Highly composable utility classes enable rapid UI development without writing custom CSS. PurgeCSS integration removes unused styles, resulting in very small production bundles (typically under 10KB). Excellent responsive design utilities. Dark mode support built in. Consistent spacing, colour, and typography scales enforce visual coherence. Works seamlessly with any component library.
+Weaknesses: HTML markup becomes verbose with many utility classes. Learning curve for developers accustomed to traditional CSS or CSS-in-JS. Custom designs require configuring the theme extensively. No pre-built components (by design).
+
+shadcn/ui:
+Type: Copy-paste component collection built on Radix UI primitives
+Licence: MIT
+Best for: React applications that need accessible, unstyled primitives with Tailwind CSS styling. Teams that want component ownership rather than dependency on a UI library.
+Strengths: Components are copied into your codebase, giving full ownership and customisation. Built on Radix UI primitives which handle accessibility, keyboard navigation, and focus management correctly. Tailwind CSS styling integrates naturally. Active community with frequent new components. CLI tool for easy installation of individual components. Not a dependency, it is your code.
+Weaknesses: Components need manual updates when improvements are released upstream. Requires Tailwind CSS. Design aesthetic leans minimal/modern which may not suit all brands. Limited component variety compared to mature libraries like Material UI.
+
+Material UI (MUI):
+Type: Comprehensive React component library
+Licence: MIT (core), commercial (advanced components)
+Best for: Teams that want a complete design system out of the box. Enterprise applications where Google's Material Design aesthetic is acceptable. Rapid prototyping where visual polish is needed immediately.
+Strengths: Largest React component library with 50+ components. Extensive theming system. Built-in accessibility. Strong documentation with examples. Advanced components (DataGrid, DatePicker) save significant development time.
+Weaknesses: Large bundle size (even with tree-shaking). Material Design aesthetic can make applications look generic. Theming customisation has a steep learning curve. CSS-in-JS (Emotion) adds runtime overhead. Breaking changes between major versions have historically been disruptive.
+
+Chakra UI:
+Type: Component library with built-in styling props
+Licence: MIT
+Best for: Teams that prefer component-level style props over utility classes. Projects needing quick prototyping with good accessibility defaults.
+Strengths: Intuitive style props API. Built-in accessibility. Good responsive design utilities. Consistent design tokens. Dark mode support.
+Weaknesses: Smaller ecosystem than Material UI. Style props can become verbose for complex layouts. CSS-in-JS runtime overhead. Version 3 migration introduced breaking changes.
+
+Recommendation:
+For new React projects in 2025, the Tailwind CSS plus shadcn/ui combination is the recommended default. It provides the best balance of flexibility, performance, accessibility, and developer experience. Use Material UI when you need its advanced data components (DataGrid, complex DatePickers) and are comfortable with its design aesthetic and bundle size.

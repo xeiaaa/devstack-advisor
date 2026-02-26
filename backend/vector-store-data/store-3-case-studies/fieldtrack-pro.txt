@@ -1,0 +1,30 @@
+Case Study: FieldTrack Pro - Field Service Management SaaS
+
+Company: TradeFlow Solutions (Melbourne, Australia)
+Industry: Field service / trades
+Project duration: 5 months (MVP), 3 months (iteration to v2)
+Team: 2 senior developers, 1 junior developer, 1 UI designer
+
+Background:
+TradeFlow Solutions needed a platform for trade businesses (plumbers, electricians, HVAC technicians) to manage job scheduling, quoting, invoicing, and field worker tracking. The existing market solutions were either too expensive for small businesses or too basic for growing operations.
+
+Technical decisions:
+The team chose React with TypeScript and Vite for the frontend, with Tailwind CSS and Radix UI primitives for styling. The backend was built with Node.js, Express, and TypeScript, using PostgreSQL with Prisma ORM. Authentication used session-based auth with express-session backed by a PostgreSQL session store, chosen over JWT because the application was primarily web-based and session management was simpler to reason about for the team.
+
+What went well:
+Choosing PostgreSQL with PostGIS extension enabled geospatial queries for job routing and technician proximity search, which became a key differentiator. The Prisma ORM accelerated development significantly with its type-safe query builder and automatic migration generation. Using Radix UI primitives with Tailwind gave the team full design control while maintaining accessibility compliance.
+
+The real-time job status updates were implemented using Server-Sent Events (SSE) rather than WebSockets. SSE was sufficient because updates only flowed server-to-client (job status changes, new assignments), and it simplified the infrastructure by avoiding WebSocket connection management and sticky sessions.
+
+What went wrong:
+The team initially underestimated the complexity of recurring job scheduling. Timezone handling across Australian states (especially during daylight saving transitions) caused subtle bugs that took weeks to resolve. The Luxon library eventually replaced manual date handling.
+
+PDF invoice generation using PDFKit was slower than expected for complex invoices with line items, images, and calculations. The team moved invoice generation to a background job queue (BullMQ with Redis) to prevent blocking the API.
+
+File uploads for job site photos were initially stored directly in PostgreSQL as binary data, which degraded database performance. Migrating to Google Cloud Storage with signed URLs resolved the issue but required reworking the upload flow.
+
+Outcomes:
+The MVP launched with 15 beta customers. By month 8, the platform had 120 paying subscribers across Basic (AUD $49/month) and Professional (AUD $99/month) tiers. Key metrics: average response time under 200ms, 99.7% uptime over 6 months, and a 4.6/5 customer satisfaction rating.
+
+Key lessons:
+Start with session-based auth for web-only applications; add JWT later if mobile clients are needed. Use background job queues from the start for any operation that might take more than 500ms. Never store binary files in PostgreSQL. PostGIS is a game-changer for location-based features. Plan timezone handling as a first-class concern, not an afterthought.

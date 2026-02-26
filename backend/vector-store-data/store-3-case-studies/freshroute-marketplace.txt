@@ -1,0 +1,38 @@
+Case Study: FreshRoute - Farm-to-Table Marketplace
+
+Company: AgriConnect Pty Ltd (Brisbane, Australia)
+Industry: Agriculture / food technology
+Project duration: 6 months (MVP), ongoing iteration
+Team: 2 full-stack developers, 1 mobile developer, 1 designer
+
+Background:
+AgriConnect set out to build a marketplace connecting local farmers directly with restaurants and consumers in South East Queensland. The platform needed to handle product listings with seasonal availability, order management with delivery scheduling, and a mobile app for farmers to manage inventory from the field.
+
+Technical decisions:
+Web frontend: React 18 with TypeScript and Next.js for server-side rendering (critical for SEO on product listing pages). Tailwind CSS with a custom design system. TanStack Query for data fetching with optimistic updates for cart operations.
+Mobile app: React Native with Expo for the farmer-facing inventory management app. Shared TypeScript types between web and mobile codebases via a shared npm package.
+Backend: Node.js with Express.js and TypeScript. RESTful API with versioning (v1/v2) from the start. PostgreSQL with Prisma ORM.
+Payments: Stripe Connect for marketplace payments (split payments between platform and farmers). Stripe Checkout for the consumer purchase flow.
+Notifications: Firebase Cloud Messaging for push notifications to the mobile app. Nodemailer with SendGrid for email notifications.
+
+What went well:
+Sharing TypeScript types between the React web app, React Native mobile app, and Express backend via a shared package prevented an entire category of bugs. API response types were defined once and consumed everywhere, with compile-time checking catching mismatches.
+
+The Next.js SSR approach paid off significantly for SEO. Product listing pages indexed within 2 weeks of launch, and organic search traffic accounted for 35% of consumer acquisition by month 4.
+
+Stripe Connect handled the complex marketplace payment flow (consumer pays platform, platform takes commission, remainder goes to farmer) with minimal custom code. The webhook integration for payment events was robust once properly implemented.
+
+Using Expo for the mobile app meant the single mobile developer could build for both iOS and Android simultaneously. EAS Build eliminated the need for local Xcode/Android Studio setups. Over-the-air updates via EAS Update allowed instant bug fixes without app store review delays.
+
+What went wrong:
+The team initially built a custom image upload pipeline with Sharp for server-side resizing and Google Cloud Storage. This worked for the web but caused memory issues on the server when multiple farmers uploaded high-resolution photos simultaneously. Moving to Cloudinary for image transformation offloaded the processing and provided automatic format optimisation (WebP, AVIF).
+
+The delivery scheduling system underestimated the complexity of route optimisation. The initial simple time-slot approach didn't account for driver capacity, geographic clustering, or perishable goods constraints. A third-party routing API (Google Maps Directions API with waypoint optimisation) was integrated at significant additional cost.
+
+React Native performance was problematic for the product listing screen with 200+ items and high-resolution images. FlatList with proper getItemLayout, keyExtractor, and image caching (expo-image) resolved the scrolling performance issues. The team learned that FlashList was a superior alternative for long lists.
+
+Outcomes:
+Launched with 45 farms and 120 restaurants. By month 9, the platform processed AUD $280,000 in monthly transactions. The mobile app achieved a 4.7/5 rating on both iOS and Android app stores. Farmer retention rate: 92% after 6 months.
+
+Key lessons:
+Share TypeScript types across all platforms from day one. Use SSR (Next.js) for any pages that need search engine visibility. Stripe Connect is worth the complexity for marketplace payments. Cloudinary or similar services are better than custom image pipelines for user-uploaded content. Plan for React Native list performance early with virtualised lists and cached images. Budget for third-party APIs (maps, routing) in cost models.

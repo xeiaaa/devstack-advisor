@@ -1,0 +1,36 @@
+Technology Profile: Database Technologies Comparison
+
+Category: Data Storage and Retrieval
+
+PostgreSQL:
+Type: Relational (SQL)
+Licence: PostgreSQL Licence (permissive open source)
+Best for: Complex queries, ACID compliance, structured data with relationships, full-text search, JSON/JSONB storage for semi-structured data.
+Strengths: Robust data integrity, advanced indexing (B-tree, GIN, GiST), excellent JSON support bridging relational and document models, strong community, extensions ecosystem (PostGIS for geospatial, pg_vector for embeddings). Row-level security for multi-tenant applications.
+Weaknesses: More complex initial setup than SQLite or MongoDB. Horizontal scaling requires additional tooling (Citus, read replicas). Can be overkill for simple key-value or document storage needs.
+Managed options: Supabase, Neon, AWS RDS, Google Cloud SQL, Railway.
+
+MongoDB:
+Type: Document (NoSQL)
+Licence: SSPL
+Best for: Rapid prototyping, flexible schemas, content management, catalogues, real-time analytics.
+Strengths: Flexible document model allows schema evolution without migrations. Horizontal scaling via sharding is built-in. Rich query language with aggregation pipeline. Atlas provides excellent managed hosting with built-in full-text search (Atlas Search).
+Weaknesses: Lack of transactions historically (now supported but with performance overhead). Joins are expensive (lookups). Data duplication is common in document design. SSPL licence has implications for some commercial uses.
+Managed options: MongoDB Atlas, AWS DocumentDB (compatible but not identical).
+
+SQLite:
+Type: Embedded relational (SQL)
+Licence: Public domain
+Best for: Mobile applications, embedded systems, development/testing, small to medium applications, edge computing.
+Strengths: Zero configuration, serverless, single-file database. Extremely fast for read-heavy workloads. No network latency. Excellent for prototyping.
+Weaknesses: Limited concurrent write support (single writer). Not suitable for high-concurrency web applications. No built-in user management or access control.
+
+Redis:
+Type: In-memory key-value store
+Licence: RSALv2 / SSPLv1 (from Redis 7.4+)
+Best for: Caching, session storage, real-time leaderboards, pub/sub messaging, rate limiting, queue management.
+Strengths: Extremely fast (sub-millisecond latency). Rich data structures (strings, hashes, lists, sets, sorted sets, streams). Built-in pub/sub. Lua scripting support.
+Weaknesses: Data size limited by memory. Persistence options (RDB snapshots, AOF) add complexity. Not a primary database. Licence change from BSD has caused community friction.
+
+Selection guidance:
+For a typical full-stack web application, PostgreSQL is the recommended default. It handles structured data, JSON, full-text search, and can serve as a queue (with SKIP LOCKED) and cache (with materialised views). Pair with Redis for session management and caching in high-traffic scenarios. Use MongoDB when schema flexibility is a primary requirement and relationships between entities are simple.

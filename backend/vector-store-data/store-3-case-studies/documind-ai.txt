@@ -1,0 +1,39 @@
+Case Study: DocuMind AI - Intelligent Document Processing Platform
+
+Company: LegalEdge Technologies (Sydney, Australia)
+Industry: Legal technology
+Project duration: 4 months (POC), 6 months (production build)
+Team: 3 senior developers, 1 ML engineer, 1 product designer
+
+Background:
+LegalEdge Technologies needed a platform to help mid-tier law firms extract, analyse, and summarise information from large document sets during due diligence processes. A typical matter involves reviewing 500-5,000 documents (contracts, correspondence, financial reports) to identify risks, obligations, and key terms.
+
+Technical decisions:
+Frontend: React 18 with TypeScript, Vite, TanStack Query for server state, shadcn/ui for the component library. The team chose shadcn/ui over Material UI for its flexibility and smaller bundle size.
+Backend: NestJS with TypeScript for the API layer, providing structure for the complex domain logic. PostgreSQL with Drizzle ORM was selected for its lightweight approach and excellent TypeScript type inference.
+AI integration: OpenAI GPT-4o via the Responses API with file_search for document retrieval. Three vector stores were used to separate different knowledge domains.
+
+Vector store architecture:
+Store 1 (Legal Knowledge Base): General legal concepts, clause types, regulatory frameworks, and risk categories. This store was populated once and shared across all clients.
+Store 2 (Client Matter Documents): The actual documents uploaded for a specific due diligence matter. Each matter had its own vector store to maintain data isolation between clients.
+Store 3 (Precedent Analysis): Historical analysis results, extracted terms, and identified patterns from previous matters (anonymised). This improved over time as more matters were processed.
+
+The team discovered that the OpenAI Responses API limited file_search to one vector store per tool invocation. They solved this by including multiple file_search tools in the tools array of a single API call, each referencing a different vector store. The system prompt instructed the model to synthesise information from all available sources and cite which store each finding came from.
+
+What went well:
+The RAG approach using OpenAI's vector stores eliminated the need to manage embedding infrastructure (no Pinecone or Weaviate deployment). The file_search tool handled chunking and retrieval automatically, reducing development time significantly. Response streaming via Server-Sent Events gave lawyers real-time feedback as the AI processed their queries, dramatically improving perceived performance.
+
+Using metadata attributes on vector store files enabled filtering by document type, date range, and matter stage, which improved retrieval relevance by 40% compared to unfiltered search.
+
+What went wrong:
+Initial document parsing was inadequate. Standard PDF text extraction (pdf-parse) lost table structures and formatting from legal documents. The team integrated Azure Document Intelligence for layout-aware parsing, which correctly extracted tables, headers, and section hierarchies but added AUD $0.02 per page to processing costs.
+
+The two-vector-store-per-call limitation initially caused the team to attempt merging stores, which degraded search relevance. The multiple-tools approach was discovered through experimentation and community forums.
+
+Token costs were 3x higher than projected because the system prompt, conversation history, and retrieved chunks consumed most of the context window. Implementing conversation summarisation and reducing max_num_results from 20 to 8 brought costs within budget.
+
+Outcomes:
+The POC demonstrated 85% accuracy in identifying key contractual risks compared to manual review. Production launch served 12 law firms within the first quarter. Processing time per matter dropped from 40-60 hours of manual review to 4-6 hours of AI-assisted review. Average cost per matter: AUD $15-30 in AI processing fees.
+
+Key lessons:
+Separate vector stores by knowledge domain for better retrieval relevance. Use file metadata attributes for filtering. Always budget 2-3x your initial token cost estimate. Document parsing quality directly determines AI output quality. Stream AI responses to improve user experience. Include source citations in every AI response for professional use cases.

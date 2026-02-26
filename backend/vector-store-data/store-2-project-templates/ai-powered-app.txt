@@ -1,0 +1,32 @@
+Project Template: AI-Powered Business Application
+
+Project type: Application with integrated AI/LLM capabilities
+Complexity: High
+Typical timeline: 3-6 months for MVP
+Team size: 2-4 developers
+
+Description:
+A web application that leverages large language models (LLMs) and vector databases to provide intelligent features such as document analysis, content generation, semantic search, chatbots, or automated data processing. The core technical challenge is integrating AI capabilities reliably while managing costs, latency, and output quality.
+
+Recommended stack:
+Frontend: React 18 with TypeScript, Vite, Tailwind CSS, shadcn/ui. Streaming response display with Server-Sent Events (SSE). Markdown rendering for AI outputs (react-markdown).
+Backend: Node.js with Express.js (TypeScript). OpenAI SDK for LLM integration. Streaming responses via SSE for real-time AI output display.
+Database: PostgreSQL for application data, user management, and conversation history. OpenAI Vector Stores for document search (via Responses API with file_search). Alternative vector databases: Pinecone, Weaviate, Qdrant for self-managed RAG.
+AI provider: OpenAI (GPT-4.1, GPT-4o-mini) via Responses API. Consider Anthropic Claude for longer context windows. Fallback provider strategy for reliability.
+File processing: PDF parsing (pdf-parse, Azure Document Intelligence for complex layouts), DOCX extraction (mammoth), CSV processing (Papa Parse).
+
+Architecture considerations:
+RAG (Retrieval-Augmented Generation): Upload documents to vector stores, then use file_search tool in Responses API to ground LLM responses in your data. This reduces hallucination and provides source attribution. Chunk documents appropriately (800 tokens default, adjust for your content type).
+Cost management: GPT-4o-mini for simple tasks (classification, extraction), GPT-4.1 for complex reasoning. Cache common queries. Implement token budgets per user/tier. Monitor usage via OpenAI dashboard and internal logging.
+Prompt engineering: System prompts define behaviour and constraints. Use structured output (JSON mode) for reliable parsing. Implement prompt versioning for A/B testing. Guard against prompt injection with input validation and output filtering.
+Streaming: Use streaming responses for better perceived latency. Display tokens as they arrive rather than waiting for complete responses. Handle streaming errors and timeouts gracefully.
+
+Key features to plan for:
+Document upload and processing pipeline (PDF, DOCX, TXT, CSV). Vector store management (create, populate, query). Chat interface with conversation history. Source citation and attribution in AI responses. Usage tracking and cost monitoring. Rate limiting per user/tier. Response quality feedback (thumbs up/down). Admin dashboard for prompt management and analytics.
+
+Vector store strategy:
+OpenAI's built-in vector stores (via file_search) are simplest to implement as they handle chunking, embedding, and retrieval. The Responses API currently supports one vector store per file_search tool invocation. For multi-store scenarios, use multiple file_search tools in the tools array or make sequential API calls and merge results.
+File search pricing: USD $2.50 per 1,000 tool calls plus USD $0.10/GB/day storage.
+
+Common pitfalls:
+Not implementing streaming makes the UI feel unresponsive (LLM responses take 2-10+ seconds). Sending entire documents as context instead of using RAG wastes tokens and hits context limits. Not validating or sanitising AI outputs before displaying them risks prompt injection and XSS. Hardcoding prompts without versioning makes iteration difficult. Not logging AI interactions makes debugging quality issues impossible.

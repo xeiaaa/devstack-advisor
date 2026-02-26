@@ -1,0 +1,31 @@
+Project Template: Multi-tenant SaaS Platform
+
+Project type: Software as a Service (subscription-based)
+Complexity: High
+Typical timeline: 4-8 months for MVP
+Team size: 2-4 developers
+
+Description:
+A cloud-hosted application serving multiple customers (tenants) from a single codebase and database. Each tenant has isolated data, customisable settings, and potentially different subscription tiers with varying feature access. Common examples include project management tools, CRM systems, invoicing platforms, and HR management software.
+
+Recommended stack:
+Frontend: React 18 with TypeScript, Vite, Tailwind CSS, shadcn/ui components, TanStack Query for server state, React Hook Form for form management.
+Backend: Node.js with Express.js or NestJS (TypeScript), RESTful API or tRPC for type-safe endpoints.
+Database: PostgreSQL with Drizzle ORM or Prisma. Row-level security or tenant_id column pattern for data isolation.
+Authentication: Session-based auth with express-session and PostgreSQL session store for web. JWT with refresh tokens if mobile clients are required. Consider Clerk or Auth0 for faster implementation with SSO support.
+Payments: Stripe for subscription management (Checkout, Billing Portal, Webhooks).
+File storage: Google Cloud Storage or AWS S3 for user uploads with signed URLs.
+Email: Nodemailer with SendGrid or Resend for transactional email.
+Deployment: Docker containers on Railway, Render, or GCP Cloud Run. Consider Replit for rapid prototyping and development.
+
+Architecture considerations:
+Multi-tenancy: Shared database with tenant_id foreign key on all tables is simplest. Schema-per-tenant offers stronger isolation but complicates migrations. Database-per-tenant is most isolated but hardest to manage.
+Background jobs: BullMQ with Redis for async tasks (email sending, report generation, webhook delivery).
+Caching: Redis for session storage and frequently accessed data. Consider edge caching for static assets.
+Monitoring: Structured logging with Pino, error tracking with Sentry, uptime monitoring with Better Uptime.
+
+Key features to plan for:
+Onboarding flow with workspace creation, user invitation system with role-based access (admin, member, viewer), subscription management with Stripe integration, usage tracking and limits per tier, audit logging for compliance, data export (CSV, PDF), webhook system for integrations, API key management for developer access.
+
+Common pitfalls:
+Not planning multi-tenancy from the start leads to expensive refactoring. Skipping rate limiting exposes the platform to abuse. Ignoring database indexing on tenant_id columns causes performance degradation as data grows. Not implementing proper soft-delete makes data recovery impossible.

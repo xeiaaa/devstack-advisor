@@ -1,0 +1,30 @@
+Technology Profile: Node.js Backend Ecosystem
+
+Runtime: Node.js 20+ LTS
+Category: Server-side JavaScript Runtime
+Licence: MIT
+Maintained by: OpenJS Foundation
+
+Overview:
+Node.js is a JavaScript runtime built on Chrome's V8 engine that enables server-side JavaScript execution. It uses an event-driven, non-blocking I/O model that makes it lightweight and efficient for data-intensive real-time applications. The unified language across frontend and backend reduces context switching for full-stack teams.
+
+Popular frameworks:
+Express.js is the most widely used, offering minimal and flexible routing with extensive middleware support. NestJS provides an opinionated, Angular-inspired architecture with built-in dependency injection, decorators, and modular organisation, making it suitable for enterprise applications. Fastify focuses on performance with schema-based validation and serialisation. Hono is a newer ultralight framework gaining traction for edge computing.
+
+Strengths:
+Excellent for I/O-bound applications and real-time features (WebSockets, SSE). Vast npm ecosystem with packages for virtually any requirement. Shared language with frontend reduces context switching and enables code reuse. Strong TypeScript support across all major frameworks. Active community with rapid evolution of tooling.
+
+Weaknesses:
+Single-threaded event loop can become a bottleneck for CPU-intensive operations (image processing, complex calculations, heavy cryptography). Error handling in async code requires discipline. The npm ecosystem's low barrier to entry means package quality varies significantly. Memory management in long-running processes requires attention.
+
+Database integration:
+ORMs: Prisma (type-safe, schema-first), Drizzle (lightweight, SQL-like), TypeORM, Sequelize.
+Prisma offers the best developer experience with auto-generated types and migrations. Drizzle provides a thinner abstraction closer to raw SQL with excellent TypeScript inference and smaller bundle size. For MongoDB: Mongoose remains the standard ODM.
+
+Authentication patterns:
+Session-based: express-session with PostgreSQL/Redis stores. Stateful, server-managed, good for traditional web apps.
+Token-based: JWT with refresh tokens. Stateless, suitable for APIs and mobile clients.
+Third-party: Passport.js, Clerk, Auth0, Firebase Auth. Reduce implementation complexity but add vendor dependency.
+
+Deployment considerations:
+Node.js applications are commonly deployed as Docker containers, on platforms like Vercel, Railway, Render, or Replit, or on traditional cloud VMs (AWS EC2, GCP Compute Engine). For serverless, AWS Lambda and Vercel Functions support Node.js natively. PM2 is commonly used as a process manager for production deployments on VMs.
