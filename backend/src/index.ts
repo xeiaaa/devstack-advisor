@@ -1,15 +1,13 @@
 import dotenv from "dotenv";
-import express from "express";
-import OpenAI from "openai";
-import cors from "cors";
-
 dotenv.config();
 
-const app = express();
+import express from "express";
+import cors from "cors";
+import { openai } from "./openai.service";
+import { retrieveRelevantChunks } from "./rag.service";
+import { buildContext } from "./context-builder";
 
-// TODO: move this to another file
-const apiKey = process.env.OPENAI_API_KEY!;
-const openai = new OpenAI({ apiKey });
+const app = express();
 
 const PORT = process.env.PORT ?? 3000;
 
@@ -118,44 +116,8 @@ app.post("/ask", async (req, res) => {
   };
   history.push(entry);
 
-  const { data } = await openai.vectorStores.list();
-  const vectorStoreIds = data.map(({ id }) => id);
-
-  const chunks: Array<{ text: string; filename: string; score?: number }> = [];
-  const maxPerStore = Math.max(
-    5,
-    Math.ceil(maxResults / vectorStoreIds.length),
-  );
-
-  for (const vectorStoreId of vectorStoreIds) {
-    for await (const result of openai.vectorStores.search(vectorStoreId, {
-      query: question,
-      max_num_results: Math.min(50, maxPerStore),
-    })) {
-      const textContent = result.content
-        ?.filter((c): c is { type: "text"; text: string } => c.type === "text")
-        .map((c) => c.text)
-        .join("\n");
-      if (textContent) {
-        chunks.push({
-          text: textContent,
-          filename: result.filename ?? "unknown",
-          score: result.score ?? undefined,
-        });
-      }
-    }
-  }
-
-  const context = chunks
-    .map(
-      (c) => `
-SOURCE FILE: ${c.filename}
-
-CONTENT:
-${c.text}
-`,
-    )
-    .join("\n\n====================\n\n");
+  const chunks = await retrieveRelevantChunks(question, maxResults);
+  const context = buildContext(chunks);
   try {
     const stream = await openai.responses.create({
       model,
