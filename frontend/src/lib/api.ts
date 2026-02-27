@@ -11,7 +11,10 @@ export type HistoryEntry = {
 
 export async function getHistory(): Promise<HistoryEntry[]> {
   const res = await fetch(`${API_URL}/history`);
-  if (!res.ok) throw new Error("Failed to fetch history");
+  if (!res.ok)
+    throw new Error(
+      "Failed to fetch history. Please check your network connection and try again.",
+    );
   return res.json();
 }
 
@@ -33,7 +36,7 @@ export type AskSettings = {
 
 export async function askQuestion(
   question: string,
-  settings?: AskSettings
+  settings?: AskSettings,
 ): Promise<AskResponse> {
   const res = await fetch(`${API_URL}/ask`, {
     method: "POST",
@@ -59,7 +62,7 @@ export async function askQuestionStream(
   question: string,
   onDelta: (delta: string) => void,
   signal?: AbortSignal,
-  settings?: AskSettings
+  settings?: AskSettings,
 ): Promise<void> {
   const res = await fetch(`${API_URL}/ask`, {
     method: "POST",
@@ -90,7 +93,9 @@ export async function askQuestionStream(
     const events = buffer.split("\n\n");
     buffer = events.pop() ?? "";
     for (const event of events) {
-      const dataLine = event.split("\n").find((line) => line.startsWith("data: "));
+      const dataLine = event
+        .split("\n")
+        .find((line) => line.startsWith("data: "));
       if (!dataLine) continue;
       try {
         const data = JSON.parse(dataLine.slice(6));
